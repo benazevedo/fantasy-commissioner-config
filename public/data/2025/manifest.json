@@ -1,0 +1,19 @@
+{
+  "source": "nflverse",
+  "season": 2025,
+  "importedAt": "2026-07-31T19:05:30.923Z",
+  "playerRows": 18539,
+  "teamRows": 544,
+  "availability": {
+    "passing_yards": true,
+    "passing_tds": true,
+    "interceptions": false,
+    "rushing_yards": true,
+    "rushing_tds": true,
+    "receptions": true,
+    "receiving_yards": true,
+    "receiving_tds": true,
+    "sacks": false,
+    "points_allowed": false
+  }
+}

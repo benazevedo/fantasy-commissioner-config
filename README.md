@@ -1,75 +1,59 @@
-# React + TypeScript + Vite
+# FantasyCommissionerConfig
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+FantasyCommissionerConfig is a scoring and roster configuration laboratory for fantasy-football commissioners. It measures positional distributions, starter and replacement thresholds, value over replacement, FLEX composition, and weekly volatility, then searches for understandable scoring-rule improvements.
 
-Currently, two official plugins are available:
+It is not a league-hosting product. The balance score is a model-based comparison aid, not an objective measure of fun.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+React 19, strict TypeScript, Vite, React Router, TanStack Query, Apache ECharts, Supabase, Zod, Lucide, Vitest, and Testing Library.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Start locally
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+No account, server, imported season, or Supabase credentials are required. The app starts with deterministic **Synthetic Demo Data**: 28 QBs, 72 RBs, 84 WRs, 36 TEs, 32 kickers, and 32 defenses across 14 weeks. Synthetic players are always labeled as demo data.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Commands
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run data:import -- --season 2025
+npm run data:import -- --season 2025 --refresh
+npm run test
+npm run lint
+npm run build
 ```
+
+The importer uses Node's built-in `fetch`, caches nflverse CSVs in `.cache/nflverse`, inspects known header aliases, and writes browser-safe processed JSON to `public/data/<season>/`. It never sends raw CSV to the browser or substitutes fake data after a failed import. nflverse data remains subject to its upstream licenses and attribution requirements.
+
+## Supabase
+
+Create a Supabase project, copy its URL and publishable key into `.env.local`, and apply [the initial migration](supabase/migrations/20260731000000_initial_schema.sql) with the Supabase CLI or SQL editor:
+
+```bash
+supabase db push
+```
+
+Never expose a service-role key in the frontend. The migration creates profiles, configurations, optimization runs, indexes, triggers, least-privilege grants, and row-level security. With variables omitted the app remains in local demo mode and localStorage saving continues to work.
+
+```env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+```
+
+## Architecture
+
+Domain models live in `src/types`; scoring, allocation, metrics, and optimization are presentation-independent services; data sources live in `src/data`; persistence is isolated under `src/repositories`; and route UI is organized by feature. Versioned localStorage keys preserve the current configuration, saved work, optimizer history, and theme.
+
+Processed historical data is static JSON. User accounts and cloud-backed saved work belong in Supabase PostgreSQL. A future architecture can add remote data sources, joint roster/scoring optimization, draft simulations, and full-season simulations without changing the calculation interfaces.
+
+## Current limitations
+
+- The browser currently runs against the built-in 2026 demo source; imported manifests are generated by the CLI but automatic manifest discovery needs a deployed season index.
+- The first optimizer searches scoring rules only. Roster requirements are analyzed live but are not optimized jointly.
+- Historical conclusions remain sensitive to injuries, roles, eras, and the chosen minimum-games threshold.
+- Large ECharts code is bundled eagerly; route-level code splitting is a future performance improvement.
